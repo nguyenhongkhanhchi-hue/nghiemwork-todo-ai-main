@@ -1,43 +1,57 @@
 import { create } from 'zustand';
 import type { TimeLog, TimeLogType } from '@/types';
 import { loadFromStorage, saveToStorage, getUserKey } from '@/lib/storage';
+import { getNowInTimezone } from '@/lib/notifications';
+import { useSettingsStore } from './settingsStore';
 
-interface TimeLogState {
-  logs: TimeLog[];
+interface TimeLogStore {
+  timeLogs: TimeLog[];
   _userId: string | undefined;
-  // Actions
   initForUser: (userId?: string) => void;
   addTimeLog: (log: Omit<TimeLog, 'id'>) => void;
-  clearLogs: () => void;
+  removeTimeLog: (id: string) => void;
+  getLogsForDate: (date: string) => TimeLog[];
+  getTotalDurationForDate: (date: string) => number;
 }
 
-export const useTimeLogStore = create<TimeLogState>((set, get) => ({
-  logs: [],
+function generateId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+}
+
+export const useTimeLogStore = create<TimeLogStore>((set, get) => ({
+  timeLogs: [],
   _userId: undefined,
 
   initForUser: (userId = 'admin') => {
     set({ _userId: userId });
-    const key = getUserKey('nw_timeLogs', userId);
+    const key = getUserKey('nw_time_logs', userId);
     const logs = loadFromStorage<TimeLog[]>(key, []);
-    set({ logs, _userId: userId });
+    set({ timeLogs: logs });
   },
 
   addTimeLog: (log) => {
     const userId = get()._userId;
-    const newLog: TimeLog = {
-      ...log,
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 9),
-      createdAt: Date.now(),
-    };
-    
-    const updated = [...get().logs, newLog];
-    saveToStorage(getUserKey('nw_timeLogs', userId), updated);
-    set({ logs: updated });
+    const id = generateId();
+    const newLog: TimeLog = { ...log, id };
+    const updated = [...get().timeLogs, newLog];
+    saveToStorage(getUserKey('nw_time_logs', userId), updated);
+    set({ timeLogs: updated });
   },
 
-  clearLogs: () => {
+  removeTimeLog: (id) => {
     const userId = get()._userId;
-    saveToStorage(getUserKey('nw_timeLogs', userId), []);
-    set({ logs: [] });
+    const updated = get().timeLogs.filter(l => l.id !== id);
+    saveToStorage(getUserKey('nw_time_logs', userId), updated);
+    set({ timeLogs: updated });
+  },
+
+  getLogsForDate: (date) => {
+    return get().timeLogs.filter(l => l.date === date);
+  },
+
+  getTotalDurationForDate: (date) => {
+    return get().timeLogs
+      .filter(l => l.date === date)
+      .reduce((sum, l) => sum + l.duration, 0);
   },
 }));

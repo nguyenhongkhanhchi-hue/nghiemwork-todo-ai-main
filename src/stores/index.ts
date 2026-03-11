@@ -30,6 +30,7 @@ import {
 import { loadFromStorage, saveToStorage, getUserKey } from '@/lib/storage';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useTimeLogStore } from '@/stores/timeLogStore';
+import { useChatStore } from '@/stores/chatStore';
 
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
@@ -139,10 +140,6 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         triggerTime: triggerTime + (i * repeatInterval * 1000),
         sent: false,
         type: 'deadline' as const,
-        repeatCount: i + 1,
-        repeatInterval: repeatInterval,
-        acknowledged: false,
-        createdAt: Date.now(),
       }));
     }
 
@@ -156,7 +153,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       recurring,
       deadlineDate,
       deadlineTime,
-      finance: finance ? [finance] : [],
+      finance,
       templateId,
       isGroup,
       reminders,
@@ -624,7 +621,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
     return false;
   },
 
-  logout: () => {
+  logout: async () => {
     localStorage.setItem('nw_signed_out', 'true');
     localStorage.removeItem('nw_admin_session');
     try {
@@ -716,3 +713,15 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
 
 // Export health store
 export { useHealthStore } from './healthStore';
+
+// Re-export settings store
+export { useSettingsStore } from './settingsStore';
+
+// Re-export time log store
+export { useTimeLogStore } from './timeLogStore';
+
+// Re-export chat store
+export { useChatStore } from './chatStore';
+
+// Re-export auth store (alias for UserStore)
+export { useUserStore as useAuthStore } from './index';
