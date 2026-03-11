@@ -139,6 +139,10 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         triggerTime: triggerTime + (i * repeatInterval * 1000),
         sent: false,
         type: 'deadline' as const,
+        repeatCount: i + 1,
+        repeatInterval: repeatInterval,
+        acknowledged: false,
+        createdAt: Date.now(),
       }));
     }
 
@@ -152,7 +156,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       recurring,
       deadlineDate,
       deadlineTime,
-      finance,
+      finance: finance ? [finance] : [],
       templateId,
       isGroup,
       reminders,
