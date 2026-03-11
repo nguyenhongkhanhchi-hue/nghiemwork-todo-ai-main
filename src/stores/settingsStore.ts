@@ -13,6 +13,8 @@ interface SettingsState {
   voiceSettings: VoiceSettings;
   theme: ThemeMode;
   dailyTimeCost: number;
+  voiceEnabled: boolean;
+  tickSoundEnabled: boolean;
   // Actions
   setCurrentPage: (page: PageType) => void;
   setFontScale: (scale: number) => void;
@@ -23,6 +25,8 @@ interface SettingsState {
   setVoiceSettings: (settings: Partial<VoiceSettings>) => void;
   setTheme: (theme: ThemeMode) => void;
   setDailyTimeCost: (cost: number) => void;
+  setVoiceEnabled: (enabled: boolean) => void;
+  setTickSound: (enabled: boolean) => void;
 }
 
 const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
@@ -46,6 +50,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     voiceSettings: savedSettings.voiceSettings || DEFAULT_VOICE_SETTINGS,
     theme: savedSettings.theme || 'dark',
     dailyTimeCost: savedSettings.dailyTimeCost || 200000,
+    voiceEnabled: savedSettings.voiceEnabled || true,
+    tickSoundEnabled: savedSettings.tickSoundEnabled || true,
 
     setCurrentPage: (page) => {
       set({ currentPage: page });
@@ -100,6 +106,18 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       set({ dailyTimeCost: cost });
       const settings = get();
       saveToStorage('nw_settings', { ...settings, dailyTimeCost: cost });
+    },
+
+    setVoiceEnabled: (enabled) => {
+      set({ voiceEnabled: enabled });
+      const settings = get();
+      saveToStorage('nw_settings', { ...settings, voiceEnabled: enabled });
+    },
+
+    setTickSound: (enabled) => {
+      set({ tickSoundEnabled: enabled });
+      const settings = get();
+      saveToStorage('nw_settings', { ...settings, tickSoundEnabled: enabled });
     },
   };
 });
