@@ -1,0 +1,399 @@
+export type EisenhowerQuadrant = 'do_first' | 'schedule' | 'delegate' | 'eliminate' | 'overdue';
+export type TaskStatus = 'pending' | 'in_progress' | 'paused' | 'done' | 'overdue';
+export type RecurringType = 'none' | 'daily' | 'weekdays' | 'weekly' | 'biweekly' | 'monthly' | 'custom';
+export type TabType = 'pending' | 'in_progress' | 'paused' | 'done' | 'overdue';
+export type PageType = 'tasks' | 'stats' | 'settings' | 'achievements' | 'templates' | 'finance' | 'chat' | 'admin' | 'notifications' | 'timecost' | 'health';
+export type TaskCategory = 'work' | 'personal' | 'health' | 'learning' | 'finance' | 'social' | 'other';
+export type ThemeMode = 'dark' | 'light';
+export type UserRole = 'admin' | 'user' | 'blocked';
+
+export interface Reminder {
+  id: string;
+  taskId: string;
+  triggerTime: number; // Timestamp khi trigger reminder
+  repeatCount: number; // Số lần nhắc nhở (1, 2, 3, ...)
+  repeatInterval: number; // Khoảng cách giữa các lần nhắc (ms)
+  acknowledged: boolean; // Đã bấm OK chưa
+  createdAt: number;
+}
+
+export interface RecurringConfig {
+  type: RecurringType;
+  customDays?: number[];
+  label?: string;
+}
+
+export type MediaBlockType = 'text' | 'image' | 'youtube';
+export interface MediaBlock {
+  id: string;
+  type: MediaBlockType;
+  content: string;
+  caption?: string;
+}
+
+export interface TaskFinance {
+  id?: string;
+  type: 'income' | 'expense';
+  amount: number;
+  category: string;
+  note?: string;
+  createdAt?: number;
+}
+
+export interface TopicParam {
+  id: string;
+  name: string;
+  value: string;
+}
+
+export interface Topic {
+  id: string;
+  name: string;
+  params: TopicParam[];
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  status: TaskStatus;
+  quadrant: EisenhowerQuadrant;
+  createdAt: number;
+  completedAt?: number;
+  deadline?: number;
+  deadlineDate?: string;
+  deadlineTime?: string;
+  duration?: number;
+  order: number;
+  recurring: RecurringConfig;
+  recurringLabel?: string;
+  notes?: string;
+  finance?: TaskFinance[]; // Changed from TaskFinance to TaskFinance[]
+  templateId?: string;
+  isGroup?: boolean;
+  groupTemplateIds?: string[];
+  showDeadline?: boolean;
+  showRecurring?: boolean;
+  showFinance?: boolean;
+  showNotes?: boolean;
+  category?: TaskCategory;
+  sharedWith?: string[];
+  reminders?: Reminder[];
+  reminderSettings?: {
+    enabled: boolean;
+    minutesBefore: number; // Nhắc nhở bao nhiêu phút trước deadline
+    repeatTimes: number; // Nhắc nhở bao nhiêu lần
+    repeatInterval: number; // Khoảng cách giữa các lần (giây)
+  };
+  startTime?: number; // Thời điểm bắt đầu (timestamp)
+  estimatedDuration?: number; // Thời lượng ước tính (phút)
+  importance?: 'high' | 'medium' | 'low'; // Độ quan trọng
+  timeCost?: number; // Chi phí thời gian (đ)
+}
+
+export interface TaskTemplate {
+  id: string;
+  title: string;
+  recurring: RecurringConfig;
+  notes?: string;
+  media?: MediaBlock[];
+  richContent?: string;
+  finance?: TaskFinance;
+  xpReward?: number;
+  topicId?: string;
+  topicParams?: TopicParam[];
+  isGroup?: boolean;
+  createdAt: number;
+  updatedAt?: number;
+  groupIds?: string[];
+}
+
+export interface ActiveTimer {
+  taskId: string;
+  isRunning: boolean;
+  isPaused: boolean;
+  elapsed: number;
+  startTime: number | null;
+  pausedAt: number | null;
+  totalPausedDuration: number;
+}
+
+// Legacy single timer - kept for backward compat restore
+export interface TimerState {
+  taskId: string | null;
+  isRunning: boolean;
+  isPaused: boolean;
+  elapsed: number;
+  startTime: number | null;
+  pausedAt: number | null;
+  totalPausedDuration: number;
+}
+
+// Time Log - for tracking manual time entries and sleep
+export type TimeLogType = 'activity' | 'sleep' | 'break' | 'other';
+
+export interface TimeLog {
+  id: string;
+  type: TimeLogType;
+  title: string; // Description of the activity
+  startTime: number; // Timestamp in milliseconds
+  endTime: number; // Timestamp in milliseconds
+  duration: number; // Duration in seconds
+  date: string; // YYYY-MM-DD format
+  taskId?: string; // Optional link to a task
+  notes?: string;
+  createdAt: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+  channelId?: string;
+}
+
+export interface ChatChannel {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: number;
+  createdBy: string;
+  messageCount: number;
+}
+
+export interface ChatAttachment {
+  id: string;
+  type: 'image' | 'document';
+  url: string;
+  name: string;
+  size: number;
+}
+
+export interface GroupChatMessage {
+  id: string;
+  channelId: string;
+  userId: string;
+  username: string;
+  content: string;
+  attachments?: ChatAttachment[];
+  mentions?: string[];
+  timestamp: number;
+  isAI?: boolean;
+}
+
+export interface AppUser {
+  id: string;
+  email: string;
+  username: string;
+  role: UserRole;
+  createdAt: number;
+  lastActive?: number;
+  avatar?: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  username: string;
+  avatar?: string;
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  condition: AchievementCondition;
+  unlockedAt?: number;
+  xpReward: number;
+  isCustom?: boolean;
+}
+
+export type AchievementCondition =
+  | { type: 'tasks_completed'; count: number }
+  | { type: 'streak_days'; count: number }
+  | { type: 'timer_total'; seconds: number }
+  | { type: 'early_bird'; count: number }
+  | { type: 'quadrant_master'; quadrant: EisenhowerQuadrant; count: number }
+  | { type: 'perfect_day'; count: number }
+  | { type: 'speed_demon'; seconds: number }
+  | { type: 'consistency'; days: number }
+  | { type: 'custom'; description: string };
+
+export interface Reward {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  xpCost: number;
+  claimed: boolean;
+  claimedAt?: number;
+}
+
+export interface GamificationState {
+  xp: number;
+  level: number;
+  streak: number;
+  lastActiveDate: string;
+  totalTasksCompleted: number;
+  totalTimerSeconds: number;
+  earlyBirdCount: number;
+  perfectDays: number;
+  activeDays: number;
+  dailyCompletionDates: string[];
+  achievements: Achievement[];
+  rewards: Reward[];
+}
+
+export interface NotificationSettings {
+  enabled: boolean;
+  beforeDeadline: number;
+  dailyReminder: boolean;
+  dailyReminderTime: string;
+}
+
+export interface VoiceSettings {
+  rate: number;
+  pitch: number;
+  voiceName: string;
+  chimeInterval: number;
+  aiVoiceResponse: boolean;
+  encouragements: string[];
+}
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  type: 'task' | 'chat' | 'system' | 'mention';
+  title: string;
+  message: string;
+  timestamp: number;
+  read: boolean;
+  actionUrl?: string;
+}
+
+export const CATEGORY_LABELS: Record<TaskCategory, { label: string; icon: string; color: string }> = {
+  work: { label: 'Công việc', icon: '💼', color: '#60A5FA' },
+  personal: { label: 'Cá nhân', icon: '👤', color: '#F472B6' },
+  health: { label: 'Sức khỏe', icon: '💪', color: '#34D399' },
+  learning: { label: 'Học tập', icon: '📚', color: '#A78BFA' },
+  finance: { label: 'Tài chính', icon: '💰', color: '#FBBF24' },
+  social: { label: 'Xã hội', icon: '👥', color: '#FB923C' },
+  other: { label: 'Khác', icon: '📌', color: '#8B8B9E' },
+};
+
+export const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
+  rate: 1.1,
+  pitch: 1.2,
+  voiceName: '',
+  chimeInterval: 30,
+  aiVoiceResponse: false,
+  encouragements: [
+    'Bạn đang làm rất tốt, tiếp tục nhé!',
+    'Cố lên, sắp xong rồi!',
+    'Tập trung là chìa khóa thành công!',
+    'Mỗi phút đều đáng giá, tiếp tục nào!',
+    'Bạn thật kiên trì, tuyệt vời!',
+    'Đừng bỏ cuộc, bạn làm được mà!',
+    'Tiến bộ mỗi ngày, giỏi lắm!',
+    'Hãy tự hào về sự nỗ lực của bạn!',
+  ],
+};
+
+export const QUADRANT_LABELS: Record<EisenhowerQuadrant, { label: string; icon: string; color: string; desc: string }> = {
+  overdue: { label: 'Quá hạn', icon: '🔥', color: '#DC2626', desc: 'Tự động (deadline đã qua)' },
+  do_first: { label: 'Hôm nay', icon: '🔴', color: '#F87171', desc: 'Tự động (deadline hôm nay)' },
+  schedule: { label: 'Lên lịch', icon: '🔵', color: '#60A5FA', desc: 'Tự động (deadline từ ngày mai)' },
+  delegate: { label: 'Ủy thác', icon: '🟡', color: '#FBBF24', desc: 'Thủ công' },
+  eliminate: { label: 'Loại bỏ', icon: '⚪', color: '#5A5A6E', desc: 'Thùng rác' },
+};
+
+// Health tracking types
+export interface WaterEntry {
+  id: string;
+  amount: number; // ml
+  timestamp: number;
+  date: string; // YYYY-MM-DD
+}
+
+export interface WeightEntry {
+  id: string;
+  value: number; // kg
+  timestamp: number;
+  date: string; // YYYY-MM-DD
+  note?: string;
+}
+
+export interface WaistEntry {
+  id: string;
+  value: number; // cm
+  timestamp: number;
+  date: string; // YYYY-MM-DD
+  note?: string;
+}
+
+export type HealthViewPeriod = 'day' | 'week' | 'month' | 'year';
+
+export interface HealthGoals {
+  targetWeight?: number;    // kg
+  targetWaist?: number;     // cm
+  height?: number;          // cm (for BMI)
+}
+
+export interface WaterReminderSettings {
+  enabled: boolean;
+  intervalMinutes: number;  // e.g. 30, 45, 60
+  startHour: number;        // e.g. 7
+  endHour: number;          // e.g. 22
+}
+
+// Daily Schedule Types
+export interface DailySchedule {
+  id: string;
+  date: string; // YYYY-MM-DD
+  tasks: ScheduledTask[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ScheduledTask {
+  taskId: string;
+  startTime: number; // Timestamp
+  endTime: number; // Timestamp
+  estimatedDuration: number; // minutes
+  actualDuration?: number; // minutes
+  status: 'scheduled' | 'in_progress' | 'completed' | 'missed';
+}
+
+// Finance Categories
+export interface FinanceCategory {
+  id: string;
+  name: string;
+  type: 'income' | 'expense';
+  color: string;
+  icon: string;
+  createdAt: number;
+}
+
+// Cost Settings
+export interface CostSettings {
+  hourlyRate: number; // Tiền mỗi giờ
+  currency: string; // VND, USD, etc.
+  workingHoursPerDay: number;
+  nonWorkingCostPerHour: number; // Chi phí thời gian không làm việc
+}
+
+// Sound Effects
+export interface SoundEffect {
+  id: string;
+  name: string;
+  file: string;
+  volume: number;
+}
+
+// Backup Settings
+export interface BackupSettings {
+  autoBackup: boolean;
+  lastBackupTime: number;
+  backupInterval: number; // hours
+}
